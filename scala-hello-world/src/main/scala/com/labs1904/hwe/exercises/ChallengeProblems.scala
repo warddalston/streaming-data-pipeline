@@ -112,15 +112,13 @@ def catsAgeOption(a: Option[Int]): Option[Int] = {
   If no ints are provided, return None.
  */
 def minimumOption(l: List[Option[Int]]): Option[Int] = {
-  val filtered_l: List[Option[Int]] = l.filter(i => i.isDefined)
+  val filtered_l = l.flatten
   if (filtered_l.isEmpty) {
     None
   } else {
-    filtered_l.reduce((x, y) => Option(x.get min y.get))
+    Option(filtered_l.min)
   }
 }
-//  l.flatten
-
 
 
 
