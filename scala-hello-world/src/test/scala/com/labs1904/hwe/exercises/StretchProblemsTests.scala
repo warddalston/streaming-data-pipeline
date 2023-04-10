@@ -23,6 +23,15 @@ class StretchProblemsTests extends FunSpec {
       assert(actual === expected)
     }
 
+    it("Handles words that start and end the same but aren't palindromes"){
+      val input = "doodled"
+      val expected = false
+
+      val actual = StretchProblems.isPalindrome(input)
+
+      assert(actual === expected)
+    }
+
     it("Returns false if a word is not spelled the same forward and backward"){
       val input = "Hello"
       val expected = false

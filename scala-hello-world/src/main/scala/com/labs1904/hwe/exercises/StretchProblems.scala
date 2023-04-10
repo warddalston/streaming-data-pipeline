@@ -7,22 +7,24 @@ object StretchProblems {
   /*
   Checks if a string is palindrome.
  */
+  @tailrec
   def isPalindrome(s: String): Boolean = {
 //    s.reverse == s
     if (s.head != s.last) {
       return false
     }
-    if (s.length >= 2) {
+    if (s.length <= 2) {
       return true
     }
-    isPalindrome(s.slice(1, s.length - 2))
+    isPalindrome(s.slice(1, s.length - 1))
   }
 
   /*
 For a given number, return the next largest number that can be created by rearranging that number's digits.
 If no larger number can be created, return -1
    */
-def getNextBiggestInner(I: Seq[Int], stop: Int): Option[List[Int]] = {
+  @tailrec
+  private def getNextBiggestInner(I: Seq[Int], stop: Int): Option[List[Int]] = {
   if (stop == I.size) {
     None
   } else {
