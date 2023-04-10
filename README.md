@@ -10,6 +10,8 @@ To start, clone this repo to your computer:
 git clone https://github.com/1904labs/streaming-data-pipeline.git
 ```
 
+TODO: Full instructions on http://hourswith.expert/
+
 There are multiple projects inside this repository:
 
  1. [Scala practice project](./scala-hello-world) -- start here
