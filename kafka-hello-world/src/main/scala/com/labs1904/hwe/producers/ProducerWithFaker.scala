@@ -1,23 +1,31 @@
 package com.labs1904.hwe.producers
 
-import com.labs1904.hwe.util.Constants._
-import com.labs1904.hwe.util.Util
+import com.labs1904.hwe.util.Util.getScramAuthString
+import org.apache.kafka.clients.producer.{Callback, KafkaProducer, ProducerConfig, ProducerRecord, RecordMetadata}
+import org.apache.kafka.common.serialization.StringSerializer
 import faker._
 import net.liftweb.json.DefaultFormats
-import org.apache.kafka.clients.producer.{Callback, KafkaProducer, ProducerRecord, RecordMetadata}
-import org.slf4j.LoggerFactory
+import net.liftweb.json.Serialization.write
+
+import java.util.Properties
 
 case class User(name: String, username: String, email: String)
 
 object ProducerWithFaker {
-  private val logger = LoggerFactory.getLogger(getClass)
-
   implicit val formats: DefaultFormats.type = DefaultFormats
+  val BootstrapServer : String = "CHANGEME"
+  val Topic: String = "CHANGEME"
+  val username: String = "CHANGEME"
+  val password: String = "CHANGEME"
+  //Use this for Windows
+  val trustStore: String = "src\\main\\resources\\kafka.client.truststore.jks"
+  //Use this for Mac
+  //val trustStore: String = "src/main/resources/kafka.client.truststore.jks"
 
   def main(args: Array[String]): Unit = {
 
     // Create the Kafka Producer
-    val properties = Util.getProperties(BOOTSTRAP_SERVER)
+    val properties = getProperties(BootstrapServer)
     val producer = new KafkaProducer[String, String](properties)
 
     // create n fake records to send to topic
@@ -36,14 +44,14 @@ object ProducerWithFaker {
       //val jsonString = write(user)
       val csvString = key + "," + name.replace(",","") + "," + user.email.replace(",","")
 
-      new ProducerRecord[String, String](DEFAULT_TOPIC, key, csvString)
+      new ProducerRecord[String, String](Topic, key, csvString)
     }).foreach(record => {
 
       // send records to topic
       producer.send(record, new Callback() {
         override def onCompletion(recordMetadata: RecordMetadata, e: Exception): Unit = {
           if (e == null) {
-            logger.info(
+            println(
               s"""
                  |Sent Record: ${record.value()}
                  |Topic: ${recordMetadata.topic()}
@@ -51,7 +59,7 @@ object ProducerWithFaker {
                  |Offset: ${recordMetadata.offset()}
                  |Timestamp: ${recordMetadata.timestamp()}
           """.stripMargin)
-          } else logger.info("Error while producing", e)
+          } else println("Error while producing", e)
         }
       })
     })
@@ -59,5 +67,19 @@ object ProducerWithFaker {
     producer.close()
   }
 
+  def getProperties(bootstrapServer: String): Properties = {
+    // Set Properties to be used for Kafka Producer
+    val properties = new Properties
+    properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer)
+    properties.setProperty(ProducerConfig.ACKS_CONFIG, "1")
+    properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+    properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
 
+    properties.put("security.protocol", "SASL_SSL")
+    properties.put("sasl.mechanism", "SCRAM-SHA-512")
+    properties.put("ssl.truststore.location", trustStore)
+    properties.put("sasl.jaas.config", getScramAuthString(username, password))
+
+    properties
+  }
 }
