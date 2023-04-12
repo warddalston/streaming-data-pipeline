@@ -1,4 +1,4 @@
 *.iml
 *.idea
 target
-src/main/scala/com/labs1904/hwe/util/Constants.scala
+*/src/main/scala/com/labs1904/hwe/util/Constants.scala
