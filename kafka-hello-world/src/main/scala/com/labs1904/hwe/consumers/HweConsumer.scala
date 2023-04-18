@@ -40,10 +40,9 @@ object HweConsumer {
 
       records.forEach((record: ConsumerRecord[String, String]) => {
         // Retrieve the message from each record
-        val message = record.value()
-        logger.info(s"Message Received: $message")
-        // TODO: Add business logic here!
-
+        val Array(id, uname, name, email, dob) = record.value().split("\t")
+        val new_user = Util.EnrichedUser(id.toInt, uname, name, email, dob, Util.numberToWordMap(id.toInt))
+        logger.info(s"Message Received: $new_user")
       })
     }
   }
