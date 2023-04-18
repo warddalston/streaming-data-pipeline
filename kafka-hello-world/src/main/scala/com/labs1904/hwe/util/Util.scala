@@ -153,6 +153,6 @@ object Util {
     ,99->"Ninety-nine"
     ,100->"One-hundred"
   )
-}
 
-case class RawUser(username: String, name: String, email: String, dob: String)
+  case class RawUser(id: Int, username: String, name: String, email: String, dob: String)
+}
