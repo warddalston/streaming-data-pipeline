@@ -154,3 +154,5 @@ object Util {
     ,100->"One-hundred"
   )
 }
+
+case class RawUser(username: String, name: String, email: String, dob: String)
