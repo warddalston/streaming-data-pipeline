@@ -1,4 +1,4 @@
-# Hours with Experts - Streaming Data Pipeline
+# Hours with Experts - Streaming Data Pipeline - DW's Version
 
 The code in this repository is a part of the [Hours with Experts](https://1904labs.com/our-culture/community/hours-with-experts/) course by [1904labs](https://1904labs.com/).
 
