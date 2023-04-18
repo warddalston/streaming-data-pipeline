@@ -4,7 +4,7 @@ import com.labs1904.hwe.util.Constants._
 import com.labs1904.hwe.util.Util
 import net.liftweb.json.DefaultFormats
 import org.apache.kafka.clients.consumer.{ConsumerRecord, ConsumerRecords, KafkaConsumer}
-import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.slf4j.LoggerFactory
 
 import java.time.Duration
@@ -43,6 +43,9 @@ object HweConsumer {
         val Array(id, uname, name, email, dob) = record.value().split("\t")
         val new_user = Util.EnrichedUser(id.toInt, uname, name, email, dob, Util.numberToWordMap(id.toInt))
         logger.info(s"Message Received: $new_user")
+
+        val send_record = new ProducerRecord[String, String](producerTopic, Util.enrichedUserToString(new_user))
+        producer.send(send_record)
       })
     }
   }
