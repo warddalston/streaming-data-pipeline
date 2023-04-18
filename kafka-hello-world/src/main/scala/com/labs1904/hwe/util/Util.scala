@@ -157,4 +157,8 @@ object Util {
   case class RawUser(id: Int, username: String, name: String, email: String, dob: String)
 
   case class EnrichedUser(id: Int, username: String, name: String, email: String, dob: String, numberAsWord: String, hweDeveloper: String = "Dalston")
+
+  def enrichedUserToString(u: EnrichedUser): String = {
+    s"${u.id}, ${u.username}, ${u.name}, ${u.email}, ${u.dob}, ${u.numberAsWord}, ${u.hweDeveloper}"
+  }
 }
