@@ -23,7 +23,8 @@ object WordCountBatchApp {
 
       val wc = sentences
         .flatMap(_.split(" "))
-//        .rdd
+        .map(s => s.filter(c => c.isLetter))
+        //        .rdd
 //        .map(row => (row, 1))
 //        .reduceByKey(_ + _)
         .groupBy("value")
