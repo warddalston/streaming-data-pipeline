@@ -56,13 +56,17 @@ object WordCountStreamingApp {
         .load()
         .selectExpr("CAST(value AS STRING)").as[String]
 
-      sentences.printSchema
+      val wc = sentences
+        .flatMap(_.split(" "))
+        .map(s => s.filter(c => c.isLetter))
+        .filter(s => !s.equals(""))
+        .groupBy("value")
+        .count
+        .sort($"count".desc)
 
-      // TODO: implement me
-      //val counts = ???
-
-      val query = sentences.writeStream
-        .outputMode(OutputMode.Append())
+      val query = wc.writeStream
+        .outputMode(OutputMode.Complete())
+        .option("numRows", 10)
         .format("console")
         .trigger(Trigger.ProcessingTime("5 seconds"))
         .start()
