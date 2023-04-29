@@ -34,8 +34,15 @@ object HelloWorldStreamingApp {
       val dataset = inputStream.toDS()
 
       // Print data out to the console every 5 seconds
-      val query = dataset.writeStream
-        .outputMode(OutputMode.Append())
+      val wc = dataset.as[String]
+        .flatMap(_.split(" "))
+        .groupBy("value")
+        .count
+        .sort($"count".desc)
+
+      val query = wc.writeStream
+        .outputMode(OutputMode.Complete())
+        .option("numRows", 10)
         .format("console")
         .trigger(Trigger.ProcessingTime("5 seconds"))
         .start()

@@ -3,6 +3,7 @@ package com.labs1904.hwe
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{StringType, StructType}
 
 object WordCountBatchApp {
   lazy val logger: Logger = Logger.getLogger(this.getClass)
@@ -17,15 +18,19 @@ object WordCountBatchApp {
         .master("local[*]")
         .getOrCreate()
       import spark.implicits._
+      val schema = new StructType().add("text", StringType, nullable=true)
+      val sentences = spark.read.schema(schema).csv("src/main/resources/sentences.txt").as[String]
 
-      val sentences = spark.read.csv("src/main/resources/sentences.txt").as[String]
-      sentences.printSchema
-
-      // TODO: implement me
-
-      //val counts = ???
-
-      //counts.foreach(wordCount=>println(wordCount))
+      val wc = sentences
+        .flatMap(_.split(" "))
+        .map(s => s.filter(c => c.isLetter))
+        //        .rdd
+//        .map(row => (row, 1))
+//        .reduceByKey(_ + _)
+        .groupBy("value")
+        .count
+        .sort($"count".desc)
+      wc.show(truncate=false)
     } catch {
       case e: Exception => logger.error(s"$jobName error in main", e)
     }
@@ -33,6 +38,6 @@ object WordCountBatchApp {
 
   // TODO: implement this function
   // HINT: you may have done this before in Scala practice...
-  def splitSentenceIntoWords(sentence: String): Array[String] = ???
+//  def splitSentenceIntoWords(sentence: String): Array[String] = ???
 
 }
