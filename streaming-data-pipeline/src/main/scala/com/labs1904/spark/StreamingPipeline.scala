@@ -1,9 +1,12 @@
 package com.labs1904.spark
 
 import org.apache.log4j.Logger
+import org.apache.hadoop.hbase.TableName
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.{OutputMode, Trigger}
-
+import com.labs1904.spark.Schemas.Constructors
+import com.labs1904.spark.Util.HbaseUtils.newHBaseConnection
+import com.labs1904.spark.Util.KafkaUtils.getScramAuthString
 
 /**
  * Spark Structured Streaming app
@@ -11,18 +14,15 @@ import org.apache.spark.sql.streaming.{OutputMode, Trigger}
  */
 object StreamingPipeline {
   lazy val logger: Logger = Logger.getLogger(this.getClass)
-  val jobName = "StreamingPipeline"
+  val jobName = "StreamingPipeline" // for Spark
 
-  val hdfsUrl = "CHANGEME"
-  val bootstrapServers = "CHANGEME"
-  val username = "CHANGEME"
-  val password = "CHANGEME"
-  val hdfsUsername = "CHANGEME" // TODO: set this to your handle
+  val hdfsUrl: String = "CHANGEME"
+  val bootstrapServers: String = "CHANGEME"  // for Kafka
+  val username: String = "CHANGEME"  // for Kafka
+  val password: String = "CHANGEME"  // for Kafka
+  val hdfsUsername: String = "CHANGEME" // TODO: set this to your handle
 
-  //Use this for Windows
-  val trustStore: String = "src\\main\\resources\\kafka.client.truststore.jks"
-  //Use this for Mac
-  //val trustStore: String = "src/main/resources/kafka.client.truststore.jks"
+  val trustStore: String = "src/main/resources/kafka.client.truststore.jks"
 
   def main(args: Array[String]): Unit = {
     try {
@@ -38,7 +38,7 @@ object StreamingPipeline {
         .readStream
         .format("kafka")
         .option("kafka.bootstrap.servers", bootstrapServers)
-        .option("subscribe", "reviews")
+        .option("subscribe", "reviews")  // This is the Kafka TOPIC
         .option("startingOffsets", "earliest")
         .option("maxOffsetsPerTrigger", "20")
         .option("startingOffsets","earliest")
@@ -47,13 +47,25 @@ object StreamingPipeline {
         .option("kafka.ssl.truststore.location", trustStore)
         .option("kafka.sasl.jaas.config", getScramAuthString(username, password))
         .load()
-        .selectExpr("CAST(value AS STRING)").as[String]
+        .selectExpr("CAST(value AS STRING)")
+        .as[String]
 
-      // TODO: implement logic here
-      val result = ds
+      val enriched_reviews = ds.mapPartitions(p => {
+        val connection = newHBaseConnection("CHANGEME")
+        val table = connection.getTable(TableName.valueOf("CHANGEME"))
+
+        val enriched_review = p.map(row => {
+          val raw_review = Constructors.rawReviewFromCSV(row)
+          val user_info = Constructors.userInfoFromComponents(raw_review, table)
+          Constructors.enrichedReviewFromComponents(raw_review, user_info)
+        }).toList.iterator
+
+        connection.close()
+        enriched_review
+      })
 
       // Write output to console
-      val query = result.writeStream
+      val query = enriched_reviews.writeStream
         .outputMode(OutputMode.Append())
         .format("console")
         .option("truncate", false)
@@ -72,11 +84,5 @@ object StreamingPipeline {
     } catch {
       case e: Exception => logger.error(s"$jobName error in main", e)
     }
-  }
-
-  def getScramAuthString(username: String, password: String) = {
-    s"""org.apache.kafka.common.security.scram.ScramLoginModule required
-   username=\"$username\"
-   password=\"$password\";"""
   }
 }
