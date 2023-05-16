@@ -7,7 +7,7 @@ The queries below were written and executed on `Hue`.
 Create a database for yourself using your handle: first initial + last name
 
 ```
-CREATE DATABASE dward
+CREATE DATABASE user
 ```
 
 ## Task 2
@@ -15,7 +15,7 @@ CREATE DATABASE dward
 Create an external table named “reviews_ext” in your database on top of the data stored in the reviews_external directory. Verify you can query it with “select * from reviews”
 
 ```
-CREATE EXTERNAL TABLE IF NOT EXISTS dward.reviews_ext(
+CREATE EXTERNAL TABLE IF NOT EXISTS user.reviews_ext(
   marketplace STRING,
   customer_id INTEGER,
   review_id STRING,
@@ -37,7 +37,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS dward.reviews_ext(
     ESCAPED BY "\\"
     LINES TERMINATED BY "\n"
   STORED AS TEXTFILE
-  LOCATION "/user/dward/reviews/reviews.tsv"
+  LOCATION "/user/user/reviews/reviews.tsv"
   TBLPROPERTIES("skip.header.line.count"="1")
 ```
 
@@ -77,7 +77,7 @@ WHERE
 Drop your reviews_ext table.
 
 ```
-DROP TABLE dward.reviews_ext
+DROP TABLE user.reviews_ext
 ```
 
 Was your data deleted? How do you know?
@@ -91,7 +91,7 @@ It wasn't. I can check the file browser. I can also make a new external table.
 Create an internal table named reviews_int in your database. LOAD the data from the reviews folder into this table.
 
 ```
-CREATE TABLE IF NOT EXISTS dward.reviews_int(
+CREATE TABLE IF NOT EXISTS user.reviews_int(
   marketplace STRING,
   customer_id INTEGER,
   review_id STRING,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS dward.reviews_int(
   STORED AS TEXTFILE
   TBLPROPERTIES("skip.header.line.count"="1")
 
-LOAD DATA INPATH "/user/dward/reviews/reviews.tsv" INTO TABLE dward.reviews_int
+LOAD DATA INPATH "/user/user/reviews/reviews.tsv" INTO TABLE user.reviews_int
 ```
 
 ## Task 5
@@ -123,7 +123,7 @@ LOAD DATA INPATH "/user/dward/reviews/reviews.tsv" INTO TABLE dward.reviews_int
 Drop your reviews_int table.
 
 ```
-DROP TABLE dward.reviews_int
+DROP TABLE user.reviews_int
 ```
 
 Was your data deleted? How do you know?
