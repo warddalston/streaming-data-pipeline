@@ -14,13 +14,22 @@ import com.labs1904.spark.Util.KafkaUtils.getScramAuthString
  */
 object StreamingPipeline {
   lazy val logger: Logger = Logger.getLogger(this.getClass)
-  val jobName = "StreamingPipeline" // for Spark
 
+  // Spark
+  val jobName = "StreamingPipeline"
+
+  // Kafka
+  val bootstrapServers: String = "CHANGEME"
+  val username: String = "CHANGEME"
+  val password: String = "CHANGEME"
+
+  // HBase
+  val hbaseUrl: String = "CHANGEME"
+  val hbaseUsername: String = "CHANGEME"
+
+  // HDFS
   val hdfsUrl: String = "CHANGEME"
-  val bootstrapServers: String = "CHANGEME"  // for Kafka
-  val username: String = "CHANGEME"  // for Kafka
-  val password: String = "CHANGEME"  // for Kafka
-  val hdfsUsername: String = "CHANGEME" // TODO: set this to your handle
+  val hdfsUsername: String = "CHANGEME"
 
   val trustStore: String = "src/main/resources/kafka.client.truststore.jks"
 
@@ -28,6 +37,8 @@ object StreamingPipeline {
     try {
       val spark = SparkSession.builder()
         .config("spark.sql.shuffle.partitions", "3")
+        .config("spark.hadoop.dfs.client.use.datanode.hostname", "true")
+        .config("spark.hadoop.fs.defaultFS", hdfsUrl)
         .appName(jobName)
         .master("local[*]")
         .getOrCreate()
@@ -51,8 +62,8 @@ object StreamingPipeline {
         .as[String]
 
       val enriched_reviews = ds.mapPartitions(p => {
-        val connection = newHBaseConnection("CHANGEME")
-        val table = connection.getTable(TableName.valueOf("CHANGEME"))
+        val connection = newHBaseConnection(hbaseUrl)
+        val table = connection.getTable(TableName.valueOf(hbaseUsername))
 
         val enriched_review = p.map(row => {
           val raw_review = Constructors.rawReviewFromCSV(row)
@@ -65,14 +76,25 @@ object StreamingPipeline {
       })
 
       // Write output to console
+//      val query = enriched_reviews.writeStream
+//        .outputMode(OutputMode.Append())
+//        .format("console")
+//        .option("truncate", false)
+//        .trigger(Trigger.ProcessingTime("5 seconds"))
+//        .start()
+
+      // Write output to HDFS as csv (from Kit on Discord)
       val query = enriched_reviews.writeStream
         .outputMode(OutputMode.Append())
-        .format("console")
-        .option("truncate", false)
+        .format("csv")
+        .option("delimiter", "\t")
+        .option("path", s"/user/${hdfsUsername}/reviews_csv")
+        .option("checkpointLocation", s"/user/${hdfsUsername}/reviews_checkpoint")
+        .partitionBy("star_rating")
         .trigger(Trigger.ProcessingTime("5 seconds"))
         .start()
 
-      // Write output to HDFS
+      // Write output to HDFS as JSON
 //      val query = result.writeStream
 //        .outputMode(OutputMode.Append())
 //        .format("json")
